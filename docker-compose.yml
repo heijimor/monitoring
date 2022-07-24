@@ -1,0 +1,54 @@
+version: "3.9"
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./rules.yml:/etc/prometheus/rules.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - '9090:9090'
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: monitoring_grafana
+    restart: unless-stopped
+    links:
+      - prometheus:prometheus
+    volumes:
+      - grafana_data:/var/lib/grafana
+    ports:
+      - '4000:3000'
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    volumes:
+      - ./alertmanager:/etc/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/config.yaml'
+      - '--storage.path=/alertmanager'
+    restart: unless-stopped
+    ports:
+      - '9093:9093'
+    expose:
+      - 9093
+    networks:
+      - monitoring
+    labels:
+      org.label-schema.group: "monitoring"
+
+volumes:
+  grafana_data: {}
+
+networks:
+  monitoring:
+    driver: bridge

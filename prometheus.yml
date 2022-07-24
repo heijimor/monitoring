@@ -1,0 +1,29 @@
+global:
+  scrape_interval: 1m
+
+scrape_configs:
+  - job_name: "prometheus"
+    scrape_interval: 1m
+    static_configs:
+    - targets: ["localhost:9090"]
+
+  - job_name: "atlas-backend-metrics"
+    metrics_path: /api/v1/metrics
+    static_configs:
+      - targets: ["localhost:3333"]
+
+  - job_name: 'prescription'
+    scrape_interval: 1m
+    honor_labels: true
+    static_configs:
+      - targets: ['prescription:8081']
+
+rule_files:
+  - rules.yml
+
+alerting:
+  alertmanagers:
+  - scheme: http
+    static_configs:
+    - targets: 
+      - 'alertmanager:9093'
